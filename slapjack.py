@@ -36,7 +36,7 @@ async def slapjack(ctx):
     
     timer_msg = await ctx.channel.fetch_message(timer_msg.id)
     msg_reactions = timer_msg.reactions[0]
-    users = [user async for user in msg_reactions.users() if user != bot.user]
-    pprint(users)
+    users = [user async for user in msg_reactions.users()]
+    users.pop(0)
 
 bot.run(TOKEN)

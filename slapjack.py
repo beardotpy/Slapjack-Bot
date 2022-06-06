@@ -2,7 +2,8 @@ import os
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
-
+import asyncio
+from pprint import pprint
 class Game:
     pass
 
@@ -12,9 +13,9 @@ class Player:
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
-intents = discord.Intents.all()
+INTENTS = discord.Intents.all()
 
-bot = commands.Bot(command_prefix="s!")
+bot = commands.Bot(command_prefix="s!", intents = INTENTS)
 
 @bot.event
 async def on_ready():
@@ -26,7 +27,16 @@ async def rules(ctx):
 
 @bot.command(aliases = ["game"])
 async def slapjack(ctx):
-    init_msg = await ctx.send("React to this message to enter a slapjack game.")
-
+    await ctx.send("React to this message to enter a slapjack game.")
+    timer_msg = await ctx.send("⏱️⏱️⏱️⏱️⏱️")
+    await timer_msg.add_reaction("🃏")
+    for i in range(5, 0, -1):
+        await timer_msg.edit(content="⏱️"*i)
+        await asyncio.sleep(1)
+    
+    timer_msg = await ctx.channel.fetch_message(timer_msg.id)
+    msg_reactions = timer_msg.reactions[0]
+    users = [user async for user in msg_reactions.users() if user != bot.user]
+    pprint(users)
 
 bot.run(TOKEN)

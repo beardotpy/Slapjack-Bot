@@ -4,12 +4,23 @@ import discord
 from discord.ext import commands
 import asyncio
 from pprint import pprint
-class Game:
+
+class Rules:
     pass
+
+class Game:
+    def __init__(self, players, deck, ruleset):
+        self.players = players
+        self.deck = deck
+        self.ruleset = ruleset
 
 class Player:
-    pass
+    def __init__(self, user):
+        self.user = user
+        self.strikes = 0
 
+    def __getattr__(self, attribute):
+        return getattr(self.user, attribute)
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -38,5 +49,9 @@ async def slapjack(ctx):
     msg_reactions = timer_msg.reactions[0]
     users = [user async for user in msg_reactions.users()]
     users.pop(0)
+
+
+    players = [Player(user) for user in users]
+    game = Game(players, [])
 
 bot.run(TOKEN)

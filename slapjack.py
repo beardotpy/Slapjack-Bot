@@ -42,26 +42,39 @@ async def slapjack(ctx):
     game = Game(players)
     game.deal_cards()
 
-    init_embed = discord.Embed(title=f"{game.current_player.name}'s Turn", description=game.turn_order_str)
+    init_embed = discord.Embed(title=f"{game.current_player.user.name}'s Turn", description=game.turn_order_str)
     await ctx.send(embed=init_embed)
 
-    while not game.is_won:
+    while game.winner == None:
         while game.current_player.hand_length == 0:
-            turn += 1
+            game.next_turn()
 
         action_msg = await bot.wait_for(
             "message",
-            check=lambda m: m.author in [player.user for player in game.players] and m.channel == ctx.channel and m.content in ["slap", "play"]
+            check=lambda m: m.author in game.user_list and m.channel == ctx.channel and m.content in ["slap", "play"]
         )
 
         # current player plays card
         if action_msg.content == "play" and action_msg.author == game.current_player.user:
             game.add_to_deck(game.current_player.lose_card())
-            game_embed = discord.Embed(title=f"{game.current_player.name}'s Turn", description=game.turn_order_str)
-            game_embed.set_image(url=f"attachment://{game.deck[0]}")
             game.next_turn()
+            game_embed = discord.Embed(title=f"{game.current_player.user.name}'s Turn", description=game.turn_order_str)
+            game_embed.set_image(url=f"attachment://{game.deck[0]}")
             await ctx.send(file=discord.File(f"cards/{game.deck[0]}"), embed=game_embed)
-        elif action_msg.content == "slap":
-            return
+        elif action_msg.content == "slap" and game.check_if_slap():
+            game.turn = game.user_list.index(action_msg.author)
+            await ctx.send(f"**{action_msg.author}** slapped first and gained **{len(game.deck)}** cards!")
+            game.current_player.pickup_deck(game.deck)
+            game.empty_deck()
+            game_embed = discord.Embed(title=f"{game.current_player.user.name}'s Turn", description=game.turn_order_str)
+            await ctx.send(embed=game_embed)
+        elif action_msg.content == "slap" and not game.check_if_slap():
+            await ctx.send(f"**{action_msg.author}** slapped incorrectly and loses a card!")
+            game.add_to_deck(game.players[game.user_list.index(action_msg.author)].lose_card())
+            game_embed = discord.Embed(title=f"{game.current_player.user.name}'s Turn", description=game.turn_order_str)
+            game_embed.set_image(url=f"attachment://{game.deck[0]}")
+            await ctx.send(file=discord.File(f"cards/{game.deck[0]}"), embed=game_embed)
+
+    await ctx.send(f"{game.winner.user.mention} is the winner!")
 
 bot.run(TOKEN)

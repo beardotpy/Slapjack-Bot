@@ -49,12 +49,10 @@ async def slapjack(ctx):
         while game.current_player.hand_length == 0:
             turn += 1
 
-        print("in main loop")
         action_msg = await bot.wait_for(
             "message",
             check=lambda m: m.author in [player.user for player in game.players] and m.channel == ctx.channel and m.content in ["slap", "play"]
         )
-        print("msg detected")
 
         # current player plays card
         if action_msg.content == "play" and action_msg.author == game.current_player.user:
@@ -62,7 +60,7 @@ async def slapjack(ctx):
             game_embed = discord.Embed(title=f"{game.current_player.name}'s Turn", description=game.turn_order_str)
             game_embed.set_image(url=f"attachment://{game.deck[0]}")
             game.next_turn()
-            await ctx.send(file=discord.File(game.deck[0]), embed=game_embed)
+            await ctx.send(file=discord.File(f"cards/{game.deck[0]}"), embed=game_embed)
         elif action_msg.content == "slap":
             return
 

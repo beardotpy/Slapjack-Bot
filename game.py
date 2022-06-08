@@ -26,9 +26,10 @@ class Game:
         for player in players:
             if player.hand_length == 0:
                 players.remove(player)
-        players = [player.name for player in players]
-        players[self.current_player_index] = f"**{players[self.current_player_index]}**"
-        return ", ".join(players)
+        players = [[player.name, player.hand_length] for player in players]
+        players[self.current_player_index][0] = f"**{players[self.current_player_index]}**"
+
+        return ", ".join([":".join(player) for player in players])
 
     def next_turn(self):
         self.turn += 1

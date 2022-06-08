@@ -58,11 +58,11 @@ async def slapjack(ctx):
 
         # current player plays card
         if action_msg.content == "play" and action_msg.author == game.current_player.user:
-            played_card = game.current_player.lose_card()
+            game.add_to_deck(game.current_player.lose_card())
             game_embed = discord.Embed(title=f"{game.current_player.name}'s Turn", description=game.turn_order_str)
-            game_embed.set_image(url=f"attachment://{played_card}")
+            game_embed.set_image(url=f"attachment://{game.deck[0]}")
             game.next_turn()
-            await ctx.send(file=discord.File(played_card), embed=game_embed)
+            await ctx.send(file=discord.File(game.deck[0]), embed=game_embed)
         elif action_msg.content == "slap":
             return
 

@@ -1,26 +1,10 @@
 import os
-from dotenv import load_dotenv
+import asyncio
+from game import Game
+from player import Player
 import discord
 from discord.ext import commands
-import asyncio
-from pprint import pprint
-
-class Rules:
-    pass
-
-class Game:
-    def __init__(self, players, deck, ruleset):
-        self.players = players
-        self.deck = deck
-        self.ruleset = ruleset
-
-class Player:
-    def __init__(self, user):
-        self.user = user
-        self.strikes = 0
-
-    def __getattr__(self, attribute):
-        return getattr(self.user, attribute)
+from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -50,8 +34,36 @@ async def slapjack(ctx):
     users = [user async for user in msg_reactions.users()]
     users.pop(0)
 
+    if len(users) < 2:
+        await ctx.send("L no friends")
+        return
 
     players = [Player(user) for user in users]
-    game = Game(players, [])
+    game = Game(players)
+    game.deal_cards()
+
+    init_embed = discord.Embed(title=f"{game.current_player.name}'s Turn", description=game.turn_order_str)
+    await ctx.send(embed=init_embed)
+
+    while not game.is_won:
+        while game.current_player.hand_length == 0:
+            turn += 1
+
+        print("in main loop")
+        action_msg = await bot.wait_for(
+            "message",
+            check=lambda m: m.author in [player.user for player in game.players] and m.channel == ctx.channel and m.content in ["slap", "play"]
+        )
+        print("msg detected")
+
+        # current player plays card
+        if action_msg.content == "play" and action_msg.author == game.current_player.user:
+            played_card = game.current_player.lose_card()
+            game_embed = discord.Embed(title=f"{game.current_player.name}'s Turn", description=game.turn_order_str)
+            game_embed.set_image(url=f"attachment://{played_card}")
+            game.next_turn()
+            await ctx.send(file=discord.File(played_card), embed=game_embed)
+        elif action_msg.content == "slap":
+            return
 
 bot.run(TOKEN)

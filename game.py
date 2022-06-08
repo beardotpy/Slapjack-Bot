@@ -33,6 +33,9 @@ class Game:
     def next_turn(self):
         self.turn += 1
 
+    def add_to_deck(self, card):
+        self.deck.inser(0, card)
+
     def deal_cards(self):
         players = self.players
         cards = os.listdir("cards")
